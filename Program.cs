@@ -23,6 +23,7 @@ namespace geoipdl
         static readonly string _usersFolder = Path.GetDirectoryName(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile));
         static readonly string _edgeUserDataDir = Path.Combine(_usersFolder, $@"{Environment.UserName}\AppData\Local\Microsoft\Edge\User Data");
         static readonly string _edgeProfileName = "Selenium";
+        static readonly string _timestampFile = "TimeStamp.txt";
 
         static readonly string _dlUrl = @"https://gitlab.torproject.org/tpo/network-health/metrics/geoip-data/-/packages";
         static readonly string _dlZip = "geoip.zip";
@@ -59,15 +60,14 @@ namespace geoipdl
 
                 if (_dlInterval > 0)
                 {
-                    var filePath = @"TimeStamp.txt";
                     var needSave = false;
                     DateTime currentDate = DateTime.Now;
 
-                    if (File.Exists(filePath))
+                    if (File.Exists(_timestampFile))
                     {
                         // Read date from file
                         DateTime savedDate;
-                        using (StreamReader reader = new StreamReader(filePath))
+                        using (StreamReader reader = new StreamReader(_timestampFile))
                         {
                             savedDate = DateTime.Parse(reader.ReadLine(), CultureInfo.InvariantCulture);
                         }
@@ -91,7 +91,7 @@ namespace geoipdl
                     // Save current date to file
                     if (needSave)
                     {
-                        using (StreamWriter writer = new StreamWriter(filePath))
+                        using (StreamWriter writer = new StreamWriter(_timestampFile))
                         {
                             writer.WriteLine(currentDate.ToString(CultureInfo.InvariantCulture));
                         }
@@ -104,6 +104,7 @@ namespace geoipdl
                     //e.Cancel = true;  // Cancel the termination process
                     Console.WriteLine(">> Ctrl+C pressed");
                     KillDriver();
+                    KillTimeStamp();
                 };
 
                 // Print header
@@ -138,13 +139,26 @@ namespace geoipdl
             }
             catch (Exception ex)
             {
-                KillDriver();
                 Console.WriteLine($"{ex.GetType()}: {ex.Message}{Environment.NewLine}{ex.StackTrace}");
+                KillDriver();
+                KillTimeStamp();
                 Console.Out.Flush();
                 if (_pauseOnError) while (true) await Task.Delay(1000);
                 Environment.Exit(1);
             }
             Environment.Exit(0);
+        }
+
+        private static void KillTimeStamp()
+        {
+            try
+            {
+                if (File.Exists(_timestampFile)) File.Delete(_timestampFile);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Can't delete timestamp file {_timestampFile}{Environment.NewLine}{ex.GetType()}: {ex.Message}{Environment.NewLine}{ex.StackTrace}");
+            }
         }
 
         private static async Task DoMain()
