@@ -60,9 +60,7 @@ namespace geoipdl
 
                 if (_dlInterval > 0)
                 {
-                    var needSave = false;
                     DateTime currentDate = DateTime.Now;
-
                     if (File.Exists(_timestampFile))
                     {
                         // Read date from file
@@ -75,7 +73,6 @@ namespace geoipdl
                         TimeSpan timeSpan = currentDate.Subtract(savedDate);
                         if (timeSpan.Days >= _dlInterval)
                         {
-                            needSave = true;
                             Console.WriteLine($"{_dlInterval} or more days have passed since the saved date.");
                         }
                         else
@@ -84,17 +81,10 @@ namespace geoipdl
                             Environment.Exit(0);
                         }
                     }
-                    else
-                    {
-                        needSave = true;
-                    }
                     // Save current date to file
-                    if (needSave)
+                    using (StreamWriter writer = new StreamWriter(_timestampFile))
                     {
-                        using (StreamWriter writer = new StreamWriter(_timestampFile))
-                        {
-                            writer.WriteLine(currentDate.ToString(CultureInfo.InvariantCulture));
-                        }
+                        writer.WriteLine(currentDate.ToString(CultureInfo.InvariantCulture));
                     }
                 }
 
