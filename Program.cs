@@ -30,6 +30,7 @@ namespace geoipdl
         static readonly string[] _dlFiles = { "geoip", "geoip6" };
         static string _outDir = ".";
         static int _dlInterval = 0;
+        static string _dlDirectLink = "";
 
         static async Task Main(string[] args)
         {
@@ -55,6 +56,11 @@ namespace geoipdl
                     {
                         var str = arg.Substring(arg.IndexOf("=") + 1).Trim();
                         _dlInterval = int.Parse(str);
+                    }
+                    if (arg.ToLower().Contains("--direct-link="))
+                    {
+                        var str = arg.Substring(arg.IndexOf("=") + 1).Trim();
+                        _dlDirectLink = str.Trim('"');
                     }
                 }
 
@@ -102,15 +108,17 @@ namespace geoipdl
                 FileVersionInfo fvi = FileVersionInfo.GetVersionInfo(assembly.Location);
                 Console.Title = fvi.ProductName;
                 Console.WriteLine("=====================================================================");
-                Console.WriteLine(fvi.ProductName + " v" + fvi.FileVersion);
+                Console.WriteLine(fvi.ProductName + " v" + fvi.FileVersion + " github.com/update692/geoip-dl");
                 Console.WriteLine("=====================================================================");
                 Console.WriteLine("Download webdriver of the same version as installed Edge browser");
                 Console.WriteLine("https://developer.microsoft.com/en-us/microsoft-edge/tools/webdriver/");
                 Console.WriteLine("=====================================================================");
+                Console.WriteLine("Optional arguments:");
                 Console.WriteLine("--headless");
                 Console.WriteLine("--pause-on-error");
                 Console.WriteLine(@"--output-folder=""C:\GEOIP\FOLDER""");
                 Console.WriteLine("--period-days=<DOWNLOAD_INTERVAL>");
+                Console.WriteLine("--direct-link=https://github.com/update692/geoip/releases/latest/download/geoip.zip");
                 Console.WriteLine("=====================================================================");
                 Console.WriteLine("Return errorlevel=0 - success, 1 - error");
                 Console.WriteLine("=====================================================================");
@@ -123,7 +131,8 @@ namespace geoipdl
 
                 if (!Directory.Exists(_outDir)) throw new ArgumentException("--output-folder does not exist");
 
-                UpdateDriver();
+                if (string.IsNullOrEmpty(_dlDirectLink))
+                    UpdateDriver();
                 DoMain().GetAwaiter().GetResult();
                 KillDriver();
             }
@@ -153,6 +162,9 @@ namespace geoipdl
 
         private static async Task DoMain()
         {
+            if (!string.IsNullOrEmpty(_dlDirectLink))
+                goto direct_dl;
+
             EdgeOptions edgeOptions = new EdgeOptions();
             // Here you set the path of the profile ending with User Data not the profile folder
             edgeOptions.AddArgument($"--user-data-dir={_edgeUserDataDir}");
@@ -191,8 +203,14 @@ namespace geoipdl
             }
         found_out:
             if (element == null) throw new Exception("Download link not found");
-
             RunBackgroundConsoleProcess("wget.exe", $@"-O {_dlZip} {element.GetAttribute("href")}");
+
+        direct_dl:
+            if (!string.IsNullOrEmpty(_dlDirectLink))
+            {
+                Console.WriteLine(_dlDirectLink);
+                RunBackgroundConsoleProcess("wget.exe", $@"-O {_dlZip} {_dlDirectLink}");
+            }
 
             foreach (var file in _dlFiles) if (File.Exists(file)) File.Delete(file);
             ExtractFiles(_dlZip, _dlFiles);
