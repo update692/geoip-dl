@@ -104,4 +104,8 @@
     </PropertyGroup>
     <Error Condition="!Exists('packages\Selenium.WebDriver.4.9.1\build\Selenium.WebDriver.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Selenium.WebDriver.4.9.1\build\Selenium.WebDriver.targets'))" />
   </Target>
+  <PropertyGroup>
+    <PostBuildEvent>del $(ProjectDir)$(OutDir)\selenium-manager\linux\selenium-manager
+del $(ProjectDir)$(OutDir)\selenium-manager\macos\selenium-manager</PostBuildEvent>
+  </PropertyGroup>
 </Project>
