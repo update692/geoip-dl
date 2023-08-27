@@ -1,6 +1,6 @@
 # geoip-dl
 
-Download geoip data for Tor Experts Bundle from [Tor project](https://gitlab.torproject.org/tpo/network-health/metrics/geoip-data/-/packages)
+Download geoip data for Tor Expert Bundle from [Tor project](https://gitlab.torproject.org/tpo/network-health/metrics/geoip-data/-/packages)
 
 ```
 =====================================================================
